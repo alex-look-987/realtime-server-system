@@ -3,8 +3,8 @@ __pycache__/
 
 *.csv
 
-!*candle_manager*.py
-!*ibapi_utils*.py
+candle_manager.py
+ibapi_utils.py
 
-!*streaming_data*.py
-!*time_series_features*.py
+streaming_data.py
+technical_indicators/time_series_features.py
