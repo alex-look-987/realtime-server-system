@@ -4,7 +4,7 @@ import orjson, lz4.frame
 import asyncio, websockets
 from miscs.candle_manager import Candlestick
 
-# Evento para controlar la disponibilidad del servidor
+# Event to handle server availability
 server_ready = asyncio.Event()
 
 async def check_server(uri):
@@ -20,11 +20,13 @@ async def check_server(uri):
 
 async def wait_for_server(wait_time=None):
   await server_ready.wait()
+
   if wait_time is not None:
     await asyncio.sleep(wait_time)
 
 def start_server_check(uri):
   loop = asyncio.get_event_loop()
+
   if loop.is_running():
     loop.create_task(check_server(uri))
   else:
@@ -32,7 +34,7 @@ def start_server_check(uri):
 
 async def send_to_server(uri, data, use_persistent=True):
   try:
-    await wait_for_server() # esperar servidor
+    await wait_for_server() # wait server
 
     json_bytes = orjson.dumps(data)
     compressed_data = lz4.frame.compress(json_bytes)
@@ -44,14 +46,17 @@ async def send_to_server(uri, data, use_persistent=True):
   except Exception as e:
     logging.error(f"Error al enviar datos: {e}")
     
-    if use_persistent: # fallback por tick si la persistente falla
+    if use_persistent: # fallback by tick
       await send_to_server(uri, data, use_persistent=False)
+
+# --------------------------- CLIENT TO SERVER PATHS --------------------------- #
 
 import sys
 server_port = int(sys.argv[1])
 
 async def historical_end(dataframe: pd.DataFrame, df_key):
   data_to_send = {"df_key": df_key, "dataframe": dataframe.to_json(orient='split')}
+  
   await send_to_server(f"ws://localhost:{server_port}/ibapi_end", data_to_send)
 
 async def update_candle(candle: Candlestick, timestamp: int, df_key):
